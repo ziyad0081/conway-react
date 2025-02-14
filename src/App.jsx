@@ -1,5 +1,7 @@
 import './App.css'
 import { useState, useEffect, useRef } from "react";
+import Download from "/src/assets/download_icon.svg?react";
+import html2canvas from 'html2canvas';
 
 
 function App() {
@@ -42,6 +44,45 @@ function App() {
     function handleGamePlaying(){
       setGamePlaying(!gamePlaying);
       setHelpToggled(false);
+    }
+    function fnv1aHash(str) {
+      let hash = 0x811c9dc5; // FNV-1a 32-bit offset basis
+      for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = (hash * 0x01000193) >>> 0; // FNV-1a prime
+      }
+      return hash >>> 0; // Ensure unsigned 32-bit integer
+    }
+
+    function hashSetShort(set) {
+      const sortedArray = Array.from(set).sort(); // Sort for consistency
+      const stringified = JSON.stringify(sortedArray); // Convert to string
+
+      // Generate a short 32-bit hash
+      const hash = fnv1aHash(stringified);
+
+      // Convert the number to Base64
+      return btoa(String.fromCharCode(
+        (hash >> 24) & 0xff,
+        (hash >> 16) & 0xff,
+        (hash >> 8) & 0xff,
+        hash & 0xff
+      )).replace(/=+$/, ''); // Trim padding
+    }
+
+
+    function handleDownload(){
+      if (gridRef.current) {
+        html2canvas(gridRef.current).then((canvas) => {
+          const image = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          const download_link = `Conway-${hashSetShort(toggledCells)}.png`
+          link.href = image;
+          link.download = download_link;
+          link.click();
+        })
+
+      }
     }
 
     function updateToggledCells(cellIdx) {
@@ -169,17 +210,18 @@ function App() {
       <div className='relative'>
         {controlsVisible &&
         <div className={'flex gap-10 absolute bottom-5 left-1/2 -translate-x-1/2 -translate-y-1/2 '}>
-          <div className='text-xl bg-[#222] p-4 text-neutral-200 border-neutral-400 border cursor-pointer'>
-          <button className='cursor-pointer' onClick={() => handleGamePlaying()}>
+            <div className='text-xl bg-[#222] p-4 text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer' onClick={() => handleGamePlaying()}>
+          <button className='cursor-pointer'>
             {gamePlaying ? "Pause" : "Play"}
           </button>
           </div>
-          <div className='text-xl bg-[#222] p-4 text-neutral-200 border-neutral-400 border cursor-pointer'>
-          <button className='cursor-pointer' onClick={() => handleReset()}>
+            <div className='text-xl bg-[#222] p-4 text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer' onClick={() => handleReset()}>
+          <button className='cursor-pointer' >
             Reset
           </button>
           </div>
-            <div className='flex text-xl bg-[#222] p-4 text-neutral-200 border-neutral-400 border cursor-pointer'>
+
+            <div className='flex text-xl bg-[#222] p-4 text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer' title='Controls the duration of each generation'>
               <label className='cursor-pointer'>
                 Delay:
               </label>
@@ -193,7 +235,14 @@ function App() {
                 className='ml-2'
               />
             </div>
+            <div className='text-xl bg-[#222] p-2 flex flex-col justify-center items-center h-16 w-16  text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer' title='Save a picture of the current state'>
+              <button className='cursor-pointer' onClick={() => handleDownload()}>
+                <Download height="2rem" width="2rem" fill="#D4D4D4" />
+              </button>
+            </div>
           </div>
+
+          
         }
 
         
@@ -201,30 +250,30 @@ function App() {
         
 
         {
-          <div className={`fixed z-50 top-0 right-0 h-full w-1/3 bg-[#222] p-10 border-l border-neutral-300 text-neutral-300 transition-transform transform ${helpToggled ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className={`fixed z-50 top-0 right-0 h-full w-1/3 bg-[#222] p-10 border-l border-[#d4d4d4] text-[#d4d4d4] transition-transform transform ${helpToggled ? 'translate-x-0' : 'translate-x-full'}`}>
           <button className='absolute top-5 right-5' onClick={() => handleToggleHelp()}>X</button>
-          <h1 className='text-4xl'>Conway&apos;s Game of Life</h1>
-          <p className='text-xl'>
+          <h1 className='text-4xl mb-4' >Conway&apos;s Game of Life</h1>
+          <p className='text-md'>
             Conway&apos;s Game of Life is a cellular automaton devised by the British mathematician John Horton Conway in 1970. It is a zero-player game, meaning that its evolution is determined by its initial state, requiring no further input. One interacts with the Game of Life by creating an initial configuration and observing how it evolves.
           </p>
-          <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" className='text-xl text-blue-500' target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a>
-          <h1 className='text-4xl'>Rules</h1>
-          <p className='text-xl'>1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.</p>
-          <p className='text-xl'>2. Any live cell with two or three live neighbours lives on to the next generation.</p>
-          <p className='text-xl'>3. Any live cell with more than three live neighbours dies, as if by overpopulation.</p>
-          <p className='text-xl'>4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</p>
+          <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life" className='text-xl text-[#d4d4d4] underline' target="_blank" rel="noopener noreferrer">Read more on Wikipedia</a>
+          <h1 className='text-4xl my-4'>Rules</h1>
+          <p className='text-lg mb-2'>1. Any live cell with fewer than two live neighbours dies, as if by underpopulation.</p>
+            <p className='text-lg mb-2'>2. Any live cell with two or three live neighbours lives on to the next generation.</p>
+            <p className='text-lg mb-2'>3. Any live cell with more than three live neighbours dies, as if by overpopulation.</p>
+            <p className='text-lg mb-2'>4. Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</p>
         </div>
         }
 
         {controlsVisible && <div className='absolute flex w-full pt-2 px-10 justify-between pointer-events-none'>
           
-          <div className=' text-xl bg-[#222] p-3 text-neutral-200 border-neutral-400 border cursor-pointer'>
+          <div className=' text-xl bg-[#222] p-3 text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer'>
             <span>Generation: {currentGeneration}</span>
           </div>
           
-          <div className=' text-neutral-300 text-4xl bg-[#222] px-10 py-2 border border-neutral-400'>Conway&apos;s Game of life</div>
+          <div className=' text-[#d4d4d4] text-4xl bg-[#222] px-10 py-2 border border-[#a1a1a1]'>Conway&apos;s Game of life</div>
 
-          <button className=' w-14 h-14 flex items-center justify-center rounded-full  text-neutral-300 text-4xl bg-[#222] border-3 border-neutral-400 cursor-pointer' onClick={() => handleToggleHelp()}>?</button>
+          <button className=' w-14 h-14 flex items-center justify-center rounded-full  text-[#d4d4d4] text-4xl bg-[#222] border-3 border-[#a1a1a1] pointer-events-auto cursor-pointer' onClick={() => handleToggleHelp()}>?</button>
           
         </div>
         }
@@ -232,7 +281,7 @@ function App() {
 
 
           <div
-            className="grid"
+            className="grid bg-[#222]"
             ref={gridRef}
             style={{
               display: "grid",
@@ -247,7 +296,7 @@ function App() {
                 key={index}
                 onMouseDown={() => handleMouseDown(index)}
                 onMouseEnter={() => handleMouseEnter(index)}
-                className={"border h-[100%] w-[100%] transition-all ease-in border-neutral-700 " + (toggledCells.has(index) ? "bg-neutral-300" : "")}
+                className={"border h-[100%] w-[100%] transition-all ease-in border-[#404040] " + (toggledCells.has(index) ? "bg-[#d4d4d4]" : "")}
               />
             ))}
           </div>

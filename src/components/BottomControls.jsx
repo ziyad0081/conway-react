@@ -1,9 +1,13 @@
 import html2canvas from "html2canvas";
 import { useGameContext } from "../contexts/GameStateContext";
 import Download from "/src/assets/download_icon.svg?react";
+import DownloadCompleted from "/src/assets/download_completed.svg?react";
+import { useState } from "react";
 
 function BottomControls() {
     const { setSpeed, handleReset, handleGamePlaying, gridRef, gameState } = useGameContext();
+
+    const [downloadCompleted, setDownloadCompleted] = useState(false);
     function fnv1aHash(str) {
           let hash = 0x811c9dc5; // FNV-1a 32-bit offset basis
           for (let i = 0; i < str.length; i++) {
@@ -33,12 +37,16 @@ function BottomControls() {
         function handleDownload(){
           if (gridRef.current) {
             html2canvas(gridRef.current).then((canvas) => {
-              const image = canvas.toDataURL("image/png");
-              const link = document.createElement("a");
-              const download_link = `Conway-${hashSetShort(gameState.toggledCells)}.png`
-              link.href = image;
-              link.download = download_link;
-              link.click();
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            const download_link = `Conway-${hashSetShort(gameState.toggledCells)}.png`
+            link.href = image;
+            link.download = download_link;
+            link.click();
+            setDownloadCompleted(true);
+            setTimeout(() => {
+                    setDownloadCompleted(false);
+                }, 2500);
             })
     
           }
@@ -73,7 +81,7 @@ function BottomControls() {
             </div>
             <div className='text-xl bg-[#222] p-2 flex flex-col justify-center items-center h-16 w-16  text-[#e5e5e5] border-[#a1a1a1] border cursor-pointer' title='Save a picture of the current state'>
                 <button className='cursor-pointer' onClick={() => handleDownload()}>
-                    <Download height="2rem" width="2rem" fill="#D4D4D4" />
+                    {!downloadCompleted ? <Download height="2rem" width="2rem" fill="#D4D4D4" /> : <DownloadCompleted height="2rem" width="2rem" />}
                 </button>
             </div>
         </div>

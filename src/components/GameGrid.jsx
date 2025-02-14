@@ -3,7 +3,7 @@ import { useGameContext } from "../contexts/GameStateContext";
 
 function GameGrid(){
     const { gameState, gridRef, setMouse, setHelp, updateToggledCells, setToggledCells, incrementGeneration ,setControlsVisible, resetGeneration } = useGameContext()
-
+    
     function getLiveNeighboursCount(row, col) {
         // All possible 8 neighbours
         const neighbours = [
